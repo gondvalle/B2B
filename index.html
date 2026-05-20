@@ -92,12 +92,26 @@
           <section class="inspector-panel sticky-panel">
             <div class="panel-head">
               <div>
-                <p class="eyebrow">Detalle</p>
-                <h3 id="detail-title">Semana</h3>
+                <p class="eyebrow">Día seleccionado</p>
+                <h3 id="detail-title">Día</h3>
               </div>
-              <div class="segmented">
-                <button class="segment active" data-view="week">Semana</button>
-                <button class="segment" data-view="day">Día</button>
+              <div class="segmented day-tools">
+                <button id="add-selected-day-session-btn" class="primary-button compact">Añadir sesión</button>
+              </div>
+            </div>
+            <div class="day-summary">
+              <div class="day-summary-main">
+                <strong id="selected-day-number">00</strong>
+                <div>
+                  <div id="selected-day-label" class="day-summary-label">Sin fecha</div>
+                  <div id="selected-day-totals" class="meta">0 sesiones · 0 €</div>
+                </div>
+              </div>
+              <div class="segmented filter-tools">
+                <button class="segment active" data-filter="all">Todas</button>
+                <button class="segment" data-filter="both">Ambos</button>
+                <button class="segment" data-filter="partner">Ros</button>
+                <button class="segment" data-filter="me">Del Valle</button>
               </div>
             </div>
             <div id="detail-content" class="detail-list"></div>
@@ -106,11 +120,11 @@
           <section class="inspector-panel">
             <div class="panel-head">
               <div>
-                <p class="eyebrow">Próximas</p>
-                <h3>Siguientes fechas</h3>
+                <p class="eyebrow">Cobros</p>
+                <h3>Falta por pagar</h3>
               </div>
             </div>
-            <div id="upcoming-sessions" class="stack-list"></div>
+            <div id="pending-invoices" class="stack-list"></div>
           </section>
         </aside>
       </main>
@@ -340,15 +354,6 @@
           <label>
             Importe base
             <input id="session-fee-input" type="number" min="0" step="0.01" required />
-          </label>
-          <label>
-            Estado
-            <select id="session-status-input" required>
-              <option value="planned">Prevista</option>
-              <option value="confirmed">Confirmada</option>
-              <option value="completed">Realizada</option>
-              <option value="cancelled">Cancelada</option>
-            </select>
           </label>
           <label>
             Quién pincha

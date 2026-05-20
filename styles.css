@@ -260,6 +260,18 @@ label {
   border-color: rgba(15, 70, 96, 0.24);
 }
 
+.calendar-day.busy-1 {
+  background: linear-gradient(180deg, rgba(216, 244, 231, 0.8), rgba(255,255,255,0.9));
+}
+
+.calendar-day.busy-2 {
+  background: linear-gradient(180deg, rgba(219, 239, 248, 0.9), rgba(255,255,255,0.92));
+}
+
+.calendar-day.busy-3 {
+  background: linear-gradient(180deg, rgba(255, 230, 215, 0.92), rgba(255,255,255,0.95));
+}
+
 .calendar-day.week-selected {
   outline: 2px solid rgba(14, 139, 99, 0.18);
 }
@@ -330,6 +342,34 @@ label {
   margin-top: 12px;
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+.day-summary {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.65);
+}
+
+.day-summary-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.day-summary-main strong {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  line-height: 1;
+}
+
+.day-summary-label {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
 }
 
 .inspector {
@@ -629,6 +669,10 @@ textarea {
   .calendar-day {
     min-height: 108px;
     padding: 10px;
+  }
+
+  .day-summary-main {
+    align-items: flex-start;
   }
 
   .calendar-top strong {
