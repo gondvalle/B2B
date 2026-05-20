@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>B2B Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"
+      defer
+    ></script>
+    <script src="./config.js"></script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <div class="page-bg"></div>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <img src="./assets/b2b-logo.png" alt="B2B logo" class="brand-logo" />
+          <div>
+            <p class="eyebrow">Del Valle x Ross</p>
+            <h1>B2B Control</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="open-session-form-btn" class="primary-button">Nueva sesión</button>
+          <button id="open-club-form-btn" class="secondary-button">Nueva sala</button>
+          <button id="quick-invoice-btn" class="ghost-button">Crear factura</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="calendar-stage">
+          <div class="calendar-head">
+            <div>
+              <p class="eyebrow">Calendario central</p>
+              <h2 id="month-title">Mes</h2>
+              <p class="subtle">El calendario es la base: aquí registras bolos, ves quién pincha y controlas el dinero.</p>
+            </div>
+            <div class="calendar-toolbar">
+              <div class="toolbar-group">
+                <button id="prev-month-btn" class="icon-button">‹</button>
+                <button id="today-btn" class="ghost-button compact">Hoy</button>
+                <button id="next-month-btn" class="icon-button">›</button>
+              </div>
+              <div class="toolbar-group">
+                <button class="view-button active" data-calendar-view="month">Mes</button>
+                <button class="view-button" data-calendar-view="week">Semana</button>
+                <button class="view-button" data-calendar-view="day">Día</button>
+              </div>
+            </div>
+          </div>
+
+          <section class="snapshot-grid">
+            <article class="snapshot-card accent">
+              <span>Sesiones del mes</span>
+              <strong id="stat-month-sessions">0</strong>
+              <small id="stat-month-range">Sin datos</small>
+            </article>
+            <article class="snapshot-card">
+              <span>Pendiente de cobro</span>
+              <strong id="stat-pending">0 €</strong>
+              <small>Facturas aún no cobradas</small>
+            </article>
+            <article class="snapshot-card">
+              <span>Neto para ti</span>
+              <strong id="stat-me-net">0 €</strong>
+              <small>Tras IVA e IRPF según participación</small>
+            </article>
+            <article class="snapshot-card warm">
+              <span>Neto compañero</span>
+              <strong id="stat-partner-net">0 €</strong>
+              <small>Tras IVA e IRPF según participación</small>
+            </article>
+          </section>
+
+          <div class="calendar-shell">
+            <div class="weekday-row" id="weekday-row"></div>
+            <div id="calendar-grid" class="calendar-grid"></div>
+          </div>
+        </section>
+
+        <aside class="inspector">
+          <section class="inspector-panel sticky-panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Detalle</p>
+                <h3 id="detail-title">Semana</h3>
+              </div>
+              <div class="segmented">
+                <button class="segment active" data-view="week">Semana</button>
+                <button class="segment" data-view="day">Día</button>
+              </div>
+            </div>
+            <div id="detail-content" class="detail-list"></div>
+          </section>
+
+          <section class="inspector-panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Próximas</p>
+                <h3>Siguientes fechas</h3>
+              </div>
+            </div>
+            <div id="upcoming-sessions" class="stack-list"></div>
+          </section>
+        </aside>
+      </main>
+
+      <section class="section-tabs">
+        <button class="section-tab active" data-target="overview">Resumen</button>
+        <button class="section-tab" data-target="clubs">Salas</button>
+        <button class="section-tab" data-target="billing">Facturas</button>
+        <button class="section-tab" data-target="settings">Configuración</button>
+      </section>
+
+      <section class="tab-panels">
+        <div class="tab-panel active" id="overview">
+          <div class="overview-grid">
+            <article class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Liquidación</p>
+                  <h3>Reparto por DJ</h3>
+                </div>
+              </div>
+              <div id="earnings-breakdown" class="stack-list"></div>
+            </article>
+
+            <article class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Cobros</p>
+                  <h3>Facturas emitidas</h3>
+                </div>
+              </div>
+              <div id="invoices-list" class="stack-list"></div>
+            </article>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="clubs">
+          <article class="panel-card">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Salas</p>
+                <h3>Discotecas y datos de cliente</h3>
+              </div>
+              <button class="primary-button compact" id="add-club-btn">Añadir</button>
+            </div>
+            <div id="clubs-list" class="stack-list"></div>
+          </article>
+        </div>
+
+        <div class="tab-panel" id="billing">
+          <div class="billing-grid">
+            <article class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Factura</p>
+                  <h3>Generar PDF mensual</h3>
+                </div>
+              </div>
+              <form id="invoice-generator-form" class="form-grid">
+                <label>
+                  Sala
+                  <select id="invoice-club-select" required></select>
+                </label>
+                <label>
+                  Mes
+                  <input id="invoice-month-input" type="month" required />
+                </label>
+                <label>
+                  Fecha de factura
+                  <input id="invoice-date-input" type="date" required />
+                </label>
+                <label>
+                  Número de factura
+                  <input id="invoice-number-input" type="text" placeholder="Autogenerado" />
+                </label>
+                <button class="primary-button" type="submit">Crear factura PDF</button>
+              </form>
+              <p class="subtle">
+                Solo entran sesiones confirmadas o realizadas de ese mes que todavía no tengan factura.
+              </p>
+            </article>
+
+            <article class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Exportación</p>
+                  <h3>Compartir datos</h3>
+                </div>
+              </div>
+              <div class="stack-actions">
+                <button id="export-data-btn" class="ghost-button">Exportar JSON</button>
+                <label class="ghost-button file-button">
+                  Importar JSON
+                  <input id="import-data-input" type="file" accept="application/json" hidden />
+                </label>
+              </div>
+              <p class="subtle">En GitHub Pages no hay base de datos compartida. Para trabajar los dos, exportáis e importáis.</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="settings">
+          <article class="panel-card">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Facturación</p>
+                <h3>Datos del emisor y del dúo</h3>
+              </div>
+            </div>
+            <form id="settings-form" class="form-grid settings-grid">
+              <label>
+                Nombre del proyecto
+                <input name="brandName" type="text" />
+              </label>
+              <label>
+                Tu nombre
+                <input name="meName" type="text" />
+              </label>
+              <label>
+                Nombre compañero
+                <input name="partnerName" type="text" />
+              </label>
+              <label>
+                Titular factura
+                <input name="issuerName" type="text" />
+              </label>
+              <label>
+                NIF / DNI
+                <input name="issuerTaxId" type="text" />
+              </label>
+              <label>
+                Dirección
+                <input name="issuerAddress" type="text" />
+              </label>
+              <label>
+                Ciudad / provincia
+                <input name="issuerCity" type="text" />
+              </label>
+              <label>
+                País
+                <input name="issuerCountry" type="text" />
+              </label>
+              <label>
+                IBAN
+                <input name="iban" type="text" />
+              </label>
+              <label>
+                Método de pago
+                <input name="paymentMethod" type="text" />
+              </label>
+              <label>
+                Texto pie factura
+                <input name="invoiceFooter" type="text" />
+              </label>
+              <button class="primary-button" type="submit">Guardar configuración</button>
+              </form>
+          </article>
+
+          <article class="panel-card">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Backend</p>
+                <h3>Guardado compartido para GitHub Pages</h3>
+              </div>
+            </div>
+            <form id="backend-form" class="form-grid">
+              <label>
+                URL Supabase
+                <input id="supabase-url-input" type="url" placeholder="https://xxxx.supabase.co" />
+              </label>
+              <label>
+                Anon key pública
+                <input id="supabase-anon-key-input" type="text" placeholder="eyJ..." />
+              </label>
+              <label>
+                Project ID
+                <input id="supabase-project-id-input" type="text" placeholder="delvalleb2b" />
+              </label>
+              <div class="backend-actions full-width">
+                <button class="primary-button" type="submit">Guardar conexión</button>
+                <button class="ghost-button" type="button" id="sync-now-btn">Sincronizar ahora</button>
+                <button class="ghost-button" type="button" id="disconnect-backend-btn">Volver a modo local</button>
+              </div>
+            </form>
+            <div id="backend-status" class="backend-status"></div>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <dialog id="session-dialog" class="modal">
+      <form id="session-form" class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Sesión</p>
+            <h3 id="session-form-title">Nueva sesión</h3>
+          </div>
+          <button type="button" class="icon-button close-button" data-close="session-dialog">×</button>
+        </div>
+        <input id="session-id-input" type="hidden" />
+        <div class="form-grid">
+          <label>
+            Fecha
+            <input id="session-date-input" type="date" required />
+          </label>
+          <label>
+            Sala
+            <select id="session-club-select" required></select>
+          </label>
+          <label>
+            Importe base
+            <input id="session-fee-input" type="number" min="0" step="0.01" required />
+          </label>
+          <label>
+            Estado
+            <select id="session-status-input" required>
+              <option value="planned">Prevista</option>
+              <option value="confirmed">Confirmada</option>
+              <option value="completed">Realizada</option>
+              <option value="cancelled">Cancelada</option>
+            </select>
+          </label>
+          <label>
+            Quién pincha
+            <select id="session-participants-input" required>
+              <option value="both">Ambos</option>
+              <option value="me">Solo yo</option>
+              <option value="partner">Solo compañero</option>
+            </select>
+          </label>
+          <label>
+            Hora
+            <input id="session-time-input" type="text" placeholder="00:30 - 06:00" />
+          </label>
+          <label class="full-width">
+            Concepto factura
+            <input id="session-title-input" type="text" placeholder="SESIÓN DEL VALLE B2B ROSS" />
+          </label>
+          <label class="full-width">
+            Notas
+            <textarea id="session-notes-input" rows="3" placeholder="Horario, caché, extras, contacto..."></textarea>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="ghost-button" data-close="session-dialog">Cancelar</button>
+          <button type="submit" class="primary-button">Guardar sesión</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="club-dialog" class="modal">
+      <form id="club-form" class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Sala</p>
+            <h3 id="club-form-title">Nueva sala</h3>
+          </div>
+          <button type="button" class="icon-button close-button" data-close="club-dialog">×</button>
+        </div>
+        <input id="club-id-input" type="hidden" />
+        <div class="form-grid">
+          <label>
+            Nombre comercial
+            <input id="club-name-input" type="text" required />
+          </label>
+          <label>
+            Empresa
+            <input id="club-company-input" type="text" />
+          </label>
+          <label>
+            CIF / NIF
+            <input id="club-tax-id-input" type="text" />
+          </label>
+          <label>
+            Email
+            <input id="club-email-input" type="email" />
+          </label>
+          <label class="full-width">
+            Dirección
+            <input id="club-address-input" type="text" />
+          </label>
+          <label>
+            IVA %
+            <input id="club-vat-input" type="number" step="0.01" min="0" value="10" />
+          </label>
+          <label>
+            IRPF %
+            <input id="club-withholding-input" type="number" step="0.01" min="0" value="15" />
+          </label>
+          <label class="full-width">
+            Notas cliente
+            <textarea id="club-notes-input" rows="3"></textarea>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="ghost-button" data-close="club-dialog">Cancelar</button>
+          <button type="submit" class="primary-button">Guardar sala</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
