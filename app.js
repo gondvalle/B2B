@@ -9,6 +9,18 @@ const statusLabels = {
   completed: "Realizada",
   cancelled: "Cancelada",
 };
+const KNOWN_CLUBS = [
+  { name: "Graf", company: "LICORELLA NOTTE SL", taxId: "B86377272", email: "", address: "Calle María de Molina, 50, 28006 Madrid, España", vatRate: 10, withholdingRate: 15, notes: "Concepto habitual: SESIÓN DEL VALLE B2B ROSS GRAF. Histórico: 18/04/2026 200€." },
+  { name: "Gabana", company: "PARTY LUXE, S.L.", taxId: "B87641015", email: "", address: "Calle María de Molina, 39, 28006 Madrid, España", vatRate: 10, withholdingRate: 15, notes: "Conceptos habituales: GABANA JUEVES / GABANA MIÉRCOLES. Históricos: 250€, 250€, 100€." },
+  { name: "Jimmys", company: "Primalia Espectáculos, SL", taxId: "B84360338", email: "", address: "C/ María de Molina, 39, 28006 Madrid, España", vatRate: 10, withholdingRate: 15, notes: "Concepto habitual: SESIÓN DEL VALLE B2B ROSS JIMMYS. Histórico: 250€ por sesión." },
+  { name: "Starlite Navidad", company: "STARLITE MUSIC GROUP SL", taxId: "B65900771", email: "", address: "C/ Antonio Herrero, 8 Pl 1 Puerta B, 28601 Marbella (Málaga)", vatRate: 10, withholdingRate: 15, notes: "Histórico: diciembre facturado en febrero. 3 sesiones de 200€." },
+  { name: "Saint", company: "EXPANSION SISTEMA MA, SL", taxId: "B86184702", email: "", address: "C/ Madera, 7, Planta 1, Puerta Izq, 28004 Madrid", vatRate: 10, withholdingRate: 15, notes: "Concepto habitual: Prestación de servicios DJ (Del Valle b2b Ross)." },
+  { name: "Bardot", company: "COMMODORO 1985, S.L", taxId: "B87072823", email: "", address: "Plaza República Argentina, 5, 28002 Madrid", vatRate: 10, withholdingRate: 15, notes: "Histórico: 3 sesiones de 300€ en septiembre." },
+  { name: "Goose Panda", company: "Nahuel Mountain S.L", taxId: "B88475462", email: "", address: "C/ de los Hermanos Machado, 5 Bl 4 Bj B, 28660 Boadilla del Monte, Madrid", vatRate: 10, withholdingRate: 15, notes: "Concepto habitual: SESIÓN DEL VALLE B2B ROSS PANDA. Histórico: 200€." },
+  { name: "Blu", company: "Pentágono Escaleno, S.L", taxId: "B90488164", email: "", address: "Avenida de la República Argentina 35A, 1A, Sevilla 41011", vatRate: 10, withholdingRate: 15, notes: "Histórico: sesión 150€ + transporte 150€." },
+  { name: "FITZ", company: "PRINCESA SOUNDS, SL", taxId: "B02853885", email: "", address: "Avenida de San Luis 95, 28003 Madrid", vatRate: 10, withholdingRate: 15, notes: "Concepto habitual: Trabajo como DJ DEL VALLE B2B ROSS. Histórico: 250€." },
+  { name: "Teatro Barceló", company: "Teatro Barceló Madrid, SL", taxId: "B88471081", email: "", address: "Calle Barceló, 11, 28004 Madrid", vatRate: 10, withholdingRate: 15, notes: "Histórico Ross main 200€." },
+];
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -46,15 +58,15 @@ function bootstrapWeekdays() {
 
 function loadLocalState() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) return JSON.parse(raw);
-  return buildDefaultState();
+  if (raw) return ensureSeededCatalog(JSON.parse(raw));
+  return ensureSeededCatalog(buildDefaultState());
 }
 
 function buildDefaultState() {
   return {
     settings: {
       brandName: "DEL VALLE B2B ROSS",
-      meName: "Gonzalo",
+      meName: "Del Valle",
       partnerName: "Ross",
       issuerName: "Alfonso Ros Alique",
       issuerTaxId: "54195990D",
@@ -65,22 +77,21 @@ function buildDefaultState() {
       paymentMethod: "Transferencia bancaria",
       invoiceFooter: "Gracias por confiar en el proyecto.",
     },
-    clubs: [
-      {
-        id: crypto.randomUUID(),
-        name: "Graf",
-        company: "LICORELLA NOTTE SL",
-        taxId: "B86377272",
-        email: "",
-        address: "Calle María de Molina, 50, 28006 Madrid, España",
-        vatRate: 10,
-        withholdingRate: 15,
-        notes: "",
-      },
-    ],
+    clubs: [],
     sessions: [],
     invoices: [],
   };
+}
+
+function ensureSeededCatalog(baseState) {
+  const byName = new Map((baseState.clubs || []).map((club) => [normalizeKey(club.name), club]));
+  for (const template of KNOWN_CLUBS) {
+    const key = normalizeKey(template.name);
+    if (!byName.has(key)) {
+      baseState.clubs.push({ id: crypto.randomUUID(), ...template });
+    }
+  }
+  return baseState;
 }
 
 function bindEvents() {
@@ -125,6 +136,9 @@ function bindEvents() {
   $("#club-form").addEventListener("submit", handleClubSubmit);
   $("#settings-form").addEventListener("submit", handleSettingsSubmit);
   $("#invoice-generator-form").addEventListener("submit", handleInvoiceSubmit);
+  $("#invoice-club-select").addEventListener("change", renderInvoiceSessionPicker);
+  $("#invoice-month-input").addEventListener("change", renderInvoiceSessionPicker);
+  $("#invoice-mode-select").addEventListener("change", renderInvoiceSessionPicker);
   $("#export-data-btn").addEventListener("click", exportData);
   $("#import-data-input").addEventListener("change", importData);
 
@@ -196,6 +210,8 @@ function renderStats() {
   $("#stat-month-sessions").textContent = monthSessions.length;
   $("#stat-month-range").textContent = monthLabel;
   $("#stat-pending").textContent = formatCurrency(pendingInvoices.reduce((sum, invoice) => sum + invoice.totalAmount, 0));
+  $("#stat-me-label").textContent = `Neto ${state.settings.meName || "Del Valle"}`;
+  $("#stat-partner-label").textContent = `Neto ${state.settings.partnerName || "Ros"}`;
   $("#stat-me-net").textContent = formatCurrency(monthBreakdown.me);
   $("#stat-partner-net").textContent = formatCurrency(monthBreakdown.partner);
 }
@@ -346,8 +362,40 @@ function renderInvoiceControls() {
   const options = state.clubs.map((club) => `<option value="${club.id}">${escapeHtml(club.name)}</option>`).join("");
   $("#session-club-select").innerHTML = options;
   $("#invoice-club-select").innerHTML = options;
-  $("#invoice-month-input").value = formatMonthInput(ui.currentMonth);
-  $("#invoice-date-input").value = formatDateInput(now);
+  if (!$("#invoice-month-input").value) $("#invoice-month-input").value = formatMonthInput(ui.currentMonth);
+  if (!$("#invoice-date-input").value) $("#invoice-date-input").value = formatDateInput(now);
+  if (!$("#invoice-mode-select").value) $("#invoice-mode-select").value = "month";
+  renderInvoiceSessionPicker();
+}
+
+function renderInvoiceSessionPicker() {
+  const container = $("#invoice-session-picker");
+  if (!container) return;
+  const sessions = getInvoiceCandidates();
+  const mode = $("#invoice-mode-select").value || "month";
+  container.innerHTML = sessions.length
+    ? sessions
+        .map((session) => `
+          <label class="picker-row">
+            <input type="checkbox" value="${session.id}" ${mode === "month" ? "checked disabled" : ""} />
+            <div>
+              <strong>${formatHumanDate(parseDateInput(session.date))}</strong>
+              <div class="meta">${escapeHtml(getClubName(session.clubId))} · ${escapeHtml(session.title || "Sesión")}</div>
+              <div class="meta">${getParticipantLabel(session.participants)} · ${formatCurrency(session.fee)}</div>
+            </div>
+          </label>
+        `)
+        .join("")
+    : `<div class="empty-state">No hay sesiones disponibles para esa sala y ese mes.</div>`;
+}
+
+function getInvoiceCandidates() {
+  const clubId = $("#invoice-club-select")?.value;
+  const month = $("#invoice-month-input")?.value;
+  if (!clubId || !month) return [];
+  return state.sessions
+    .filter((session) => session.clubId === clubId && !session.invoiceId && session.date.startsWith(month) && (session.status === "confirmed" || session.status === "completed"))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function renderInvoices() {
@@ -569,10 +617,15 @@ async function handleInvoiceSubmit(event) {
   const month = $("#invoice-month-input").value;
   const invoiceDate = $("#invoice-date-input").value;
   const number = $("#invoice-number-input").value.trim() || buildInvoiceNumber(invoiceDate);
-  const sessions = state.sessions.filter((session) => session.clubId === clubId && !session.invoiceId && session.date.startsWith(month) && (session.status === "confirmed" || session.status === "completed"));
+  const mode = $("#invoice-mode-select").value || "month";
+  const candidates = getInvoiceCandidates();
+  const checkedIds = new Set(
+    $$("#invoice-session-picker input[type='checkbox']:checked").map((input) => input.value),
+  );
+  const sessions = mode === "month" ? candidates : candidates.filter((session) => checkedIds.has(session.id));
 
   if (!sessions.length) {
-    alert("No hay sesiones confirmadas o realizadas sin facturar para esa sala y ese mes.");
+    alert(mode === "month" ? "No hay sesiones confirmadas o realizadas sin facturar para esa sala y ese mes." : "Selecciona al menos un día para facturar.");
     return;
   }
 
@@ -711,7 +764,7 @@ function hasRemoteData(remoteState) {
 
 function replaceState(remoteState) {
   state.settings = remoteState.settings || state.settings;
-  state.clubs = remoteState.clubs || [];
+  state.clubs = ensureSeededCatalog({ clubs: remoteState.clubs || [] }).clubs;
   state.sessions = remoteState.sessions || [];
   state.invoices = remoteState.invoices || [];
 }
@@ -945,9 +998,9 @@ function getInvoice(invoiceId) {
 }
 
 function getParticipantLabel(mode) {
-  if (mode === "me") return state.settings.meName || "Yo";
-  if (mode === "partner") return state.settings.partnerName || "Compañero";
-  return `${state.settings.meName || "Yo"} + ${state.settings.partnerName || "Compañero"}`;
+  if (mode === "me") return state.settings.meName || "Del Valle";
+  if (mode === "partner") return state.settings.partnerName || "Ros";
+  return `${state.settings.meName || "Del Valle"} + ${state.settings.partnerName || "Ros"}`;
 }
 
 function formatCurrency(value) {
@@ -983,4 +1036,12 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function normalizeKey(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
 }

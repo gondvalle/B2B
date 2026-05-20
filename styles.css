@@ -157,6 +157,7 @@ label {
 
 .calendar-head,
 .panel-head,
+.compact-head,
 .topbar-actions,
 .calendar-toolbar,
 .toolbar-group,
@@ -514,6 +515,31 @@ textarea {
   background: rgba(255, 255, 255, 0.6);
   color: var(--muted);
   line-height: 1.5;
+}
+
+.invoice-picker-block {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.picker-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.picker-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
 }
 
 .backend-status strong {

@@ -71,12 +71,12 @@
               <small>Facturas aún no cobradas</small>
             </article>
             <article class="snapshot-card">
-              <span>Neto para ti</span>
+              <span id="stat-me-label">Neto Del Valle</span>
               <strong id="stat-me-net">0 €</strong>
               <small>Tras IVA e IRPF según participación</small>
             </article>
             <article class="snapshot-card warm">
-              <span>Neto compañero</span>
+              <span id="stat-partner-label">Neto Ros</span>
               <strong id="stat-partner-net">0 €</strong>
               <small>Tras IVA e IRPF según participación</small>
             </article>
@@ -186,6 +186,22 @@
                   Número de factura
                   <input id="invoice-number-input" type="text" placeholder="Autogenerado" />
                 </label>
+                <label class="full-width">
+                  Modo de factura
+                  <select id="invoice-mode-select">
+                    <option value="month">Todo el mes</option>
+                    <option value="custom">Días sueltos del mes</option>
+                  </select>
+                </label>
+                <div class="full-width invoice-picker-block">
+                  <div class="panel-head compact-head">
+                    <div>
+                      <p class="eyebrow">Sesiones incluidas</p>
+                      <h4>Selecciona los días a facturar</h4>
+                    </div>
+                  </div>
+                  <div id="invoice-session-picker" class="stack-list"></div>
+                </div>
                 <button class="primary-button" type="submit">Crear factura PDF</button>
               </form>
               <p class="subtle">
