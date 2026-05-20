@@ -41,6 +41,7 @@ const ui = {
   selectedWeekStart: formatDateInput(getWeekStart(now)),
   detailMode: "week",
   activeSection: "overview",
+  invoiceFeedback: "",
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -190,6 +191,7 @@ function renderApp() {
   renderInvoices();
   renderEarnings();
   renderBackendStatus();
+  renderInvoiceFeedback();
   activateSection(ui.activeSection);
 }
 
@@ -247,6 +249,7 @@ function renderCalendar() {
       ui.selectedWeekStart = formatDateInput(getWeekStart(date));
       renderCalendar();
       renderDetails();
+      openSessionDialog();
     }),
   );
 }
@@ -366,6 +369,12 @@ function renderInvoiceControls() {
   if (!$("#invoice-date-input").value) $("#invoice-date-input").value = formatDateInput(now);
   if (!$("#invoice-mode-select").value) $("#invoice-mode-select").value = "month";
   renderInvoiceSessionPicker();
+}
+
+function renderInvoiceFeedback() {
+  const node = $("#invoice-feedback");
+  if (!node) return;
+  node.textContent = ui.invoiceFeedback;
 }
 
 function renderInvoiceSessionPicker() {
@@ -659,8 +668,10 @@ async function handleInvoiceSubmit(event) {
   state.invoices.push(invoice);
   state.sessions = state.sessions.map((session) => sessions.some((item) => item.id === session.id) ? { ...session, invoiceId: invoice.id } : session);
   downloadInvoicePdf(invoice);
+  ui.invoiceFeedback = `Factura ${invoice.number} creada con ${sessions.length} sesión${sessions.length > 1 ? "es" : ""} para ${getClubName(clubId)}.`;
   await persistAndRender({ full: true });
   activateSection("overview");
+  document.querySelector("#invoices-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function handleBackendSubmit(event) {
